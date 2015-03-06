@@ -1,6 +1,11 @@
 -----------------------
 XDD Release ChangeLog
 -----------------------
+XDD-7.0.0 RC28
+==============
+* XDD: Modified restart process so restart file progress is not overwritten with initial offset
+* XDD: Added endian format conversion functionality
+
 XDD-7.0.0 RC27
 ==============
 * XDDMCP: Fix thread counts so that 100% hang does not occur
