@@ -15,6 +15,7 @@
  * Send and Receive functions. 
  */
 #include "xint.h"
+#include "endian_compat.h"
 
 /*----------------------------------------------------------------------*/
 /* xdd_e2e_src_send() - send the data from source to destination 
@@ -78,6 +79,17 @@ if (xgp->global_options & GO_DEBUG_E2E) fprintf(stderr,"DEBUG_E2E: %lld: xdd_e2e
 	e2ehp->e2eh_byte_offset = wdp->wd_task.task_byte_offset;
 	e2ehp->e2eh_data_length = wdp->wd_task.task_xfer_size;
 
+	e2ep->e2e_xfer_size = sizeof(xdd_e2e_header_t) + e2ehp->e2eh_data_length;
+
+    custom_hton(&(e2ehp->e2eh_magic), sizeof(e2ehp->e2eh_magic));
+    custom_hton(&(e2ehp->e2eh_worker_thread_number), sizeof(e2ehp->e2eh_worker_thread_number));
+    custom_hton(&(e2ehp->e2eh_sequence_number), sizeof(e2ehp->e2eh_sequence_number));
+    custom_hton(&(e2ehp->e2eh_send_time), sizeof(e2ehp->e2eh_send_time));
+    custom_hton(&(e2ehp->e2eh_recv_time), sizeof(e2ehp->e2eh_recv_time));
+    custom_hton(&(e2ehp->e2eh_byte_offset), sizeof(e2ehp->e2eh_byte_offset));
+    custom_hton(&(e2ehp->e2eh_data_length), sizeof(e2ehp->e2eh_data_length));
+
+	
 	// The message header for this data packet precedes the data portion
 	if (tdp->td_ts_table.ts_options & (TS_ON | TS_TRIGGERED)) {
 		ttep = &tdp->td_ts_table.ts_hdrp->tsh_tte[wdp->wd_ts_entry];
@@ -92,7 +104,7 @@ if (xgp->global_options & GO_DEBUG_E2E) fprintf(stderr,"DEBUG_E2E: %lld: xdd_e2e
 	// The transfer size is the size of the header buffer (not the header struct)
 	// plus the amount of data in the data portion of the IO buffer.
 	// For EOF operations the amount of data in the data portion should be zero.
-	e2ep->e2e_xfer_size = sizeof(xdd_e2e_header_t) + e2ehp->e2eh_data_length;
+
 
 if (xgp->global_options & GO_DEBUG_E2E) fprintf(stderr,"DEBUG_E2E: %lld: xdd_e2e_src_send: Target: %d: Worker: %d: Preparing to send %d bytes: e2ep=%p: e2ehp=%p: e2e_datap=%p: e2e_xfer_size=%d: e2eh_data_length=%lld\n",(long long int)pclk_now(), tdp->td_target_number, wdp->wd_worker_number, e2ep->e2e_xfer_size,e2ep,e2ehp,e2ep->e2e_datap,e2ep->e2e_xfer_size,(long long int)e2ehp->e2eh_data_length);
 if (xgp->global_options & GO_DEBUG_E2E) xdd_show_e2e_header((xdd_e2e_header_t *)bufp);
@@ -102,7 +114,7 @@ if (xgp->global_options & GO_DEBUG_E2E) xdd_show_e2e_header((xdd_e2e_header_t *)
 		send_size = e2ep->e2e_xfer_size - bytes_sent;
 		if (send_size > max_xfer) 
 			send_size = max_xfer;
-if (xgp->global_options & GO_DEBUG_E2E) fprintf(stderr,"DEBUG_E2E: %lld: xdd_e2e_src_send: Target: %d: Worker: %d: Actually sending <send_size> %d bytes: e2ep=%p: e2ehp=%p: e2e_datap=%p: bytes_sent=%d: e2ehp+bytes_sent=%p: first 8 bytes=0x%016llx\n",(long long int)pclk_now(), tdp->td_target_number, wdp->wd_worker_number, send_size,e2ep,e2ehp,e2ep->e2e_datap,(int)bytes_sent,bufp, *((unsigned long long int *)bufp));
+if (xgp->global_options & GO_DEBUG_E2E) fprintf(stderr,"DEBUG_E2E: %lld: xdd_e2e_src_send: Target: %d: Worker: %d: Actually sending <send_size> %d bytes: e2ep=%p: e2ehp=%p: e2e_datap=%p: bytes_sent=%d: e2ehp+bytes_sent=%p: first 4 bytes=0x%081x\n",(long long int)pclk_now(), tdp->td_target_number, wdp->wd_worker_number, send_size,e2ep,e2ehp,e2ep->e2e_datap,(int)bytes_sent,bufp, *((unsigned int *)bufp));
 		e2ep->e2e_send_status = sendto(e2ep->e2e_sd,
 									   bufp,
 									   send_size, 
@@ -118,6 +130,17 @@ if (xgp->global_options & GO_DEBUG_E2E) fprintf(stderr,"DEBUG_E2E: %lld: xdd_e2e
 		sento_calls++;
 if (xgp->global_options & GO_DEBUG_E2E) fprintf(stderr,"DEBUG_E2E: %lld: xdd_e2e_src_send: Target: %d: Worker: %d: Sent %d of %d bytes - %d bytes sent so far: bufp=%p\n",(long long int)pclk_now(),  tdp->td_target_number, wdp->wd_worker_number, e2ep->e2e_send_status,e2ep->e2e_xfer_size,bytes_sent,bufp);
 	}
+	
+	custom_ntoh(&(e2ehp->e2eh_magic), sizeof(e2ehp->e2eh_magic));
+    custom_ntoh(&(e2ehp->e2eh_worker_thread_number), sizeof(e2ehp->e2eh_worker_thread_number));
+    custom_ntoh(&(e2ehp->e2eh_sequence_number), sizeof(e2ehp->e2eh_sequence_number));
+    custom_ntoh(&(e2ehp->e2eh_send_time), sizeof(e2ehp->e2eh_send_time));
+    custom_ntoh(&(e2ehp->e2eh_recv_time), sizeof(e2ehp->e2eh_recv_time));
+    custom_ntoh(&(e2ehp->e2eh_byte_offset), sizeof(e2ehp->e2eh_byte_offset));
+    custom_ntoh(&(e2ehp->e2eh_data_length), sizeof(e2ehp->e2eh_data_length));
+
+
+	
 	nclk_now(&wdp->wd_counters.tc_current_net_end_time);
 	// Time stamp if requested
 	if (tdp->td_ts_table.ts_options & (TS_ON | TS_TRIGGERED)) {
@@ -282,6 +305,16 @@ if (xgp->global_options & GO_DEBUG_E2E) xdd_show_e2e_header(e2ehp);
 if (xgp->global_options & GO_DEBUG_E2E) fprintf(stderr,"DEBUG_E2E: %lld: xdd_e2e_dest_receive_header: Target: %d: Worker: %d: HEADER: Got the header... now check to see if the status <%d> is > 0 \n", (long long int)pclk_now(),  tdp->td_target_number, wdp->wd_worker_number, status);
 		} // End of IF stmnt that processes a CSD 
 	} // End of FOR loop that processes all CSDs that were ready
+	
+	custom_ntoh(&(e2ehp->e2eh_magic), sizeof(e2ehp->e2eh_magic));
+    custom_ntoh(&(e2ehp->e2eh_worker_thread_number), sizeof(e2ehp->e2eh_worker_thread_number));
+    custom_ntoh(&(e2ehp->e2eh_sequence_number), sizeof(e2ehp->e2eh_sequence_number));
+    custom_ntoh(&(e2ehp->e2eh_send_time), sizeof(e2ehp->e2eh_send_time));
+    custom_ntoh(&(e2ehp->e2eh_recv_time), sizeof(e2ehp->e2eh_recv_time));
+    custom_ntoh(&(e2ehp->e2eh_byte_offset), sizeof(e2ehp->e2eh_byte_offset));
+    custom_ntoh(&(e2ehp->e2eh_data_length), sizeof(e2ehp->e2eh_data_length));
+
+
 
 	if (bytes_received != e2ep->e2e_header_size) {
 		// This is an internal error that should not occur...
@@ -395,6 +428,7 @@ if (xgp->global_options & GO_DEBUG_E2E) fprintf(stderr,"DEBUG_E2E: %lld: xdd_e2e
 								NULL);
 if (xgp->global_options & GO_DEBUG_E2E) fprintf(stderr,"DEBUG_E2E: %lld: xdd_e2e_dest_receive_data: Target: %d: Worker: %d: AFTER RECVFROM DATA: Received %d of %d bytes\n", (long long int)pclk_now(),  tdp->td_target_number, wdp->wd_worker_number, status, e2ep->e2e_data_size);
 
+   
 				// Check for errors
 				if (status <= 0) {
 					e2ep->e2e_recv_status = status;
@@ -603,6 +637,15 @@ if (xgp->global_options & GO_DEBUG_E2E) fprintf(stderr,"DEBUG_E2E: %lld: xdd_e2e
 	e2ehp->e2eh_data_length = 0;	// NA - no data being sent other than the header
 	e2ehp->e2eh_magic = XDD_E2E_EOF;
 	memcpy(e2ehp->e2eh_cookie, tdp->td_magic_cookie, sizeof(e2ehp->e2eh_cookie));
+	
+	custom_hton(&(e2ehp->e2eh_magic), sizeof(e2ehp->e2eh_magic));
+    custom_hton(&(e2ehp->e2eh_worker_thread_number), sizeof(e2ehp->e2eh_worker_thread_number));
+    custom_hton(&(e2ehp->e2eh_sequence_number), sizeof(e2ehp->e2eh_sequence_number));
+    custom_hton(&(e2ehp->e2eh_send_time), sizeof(e2ehp->e2eh_send_time));
+    custom_hton(&(e2ehp->e2eh_recv_time), sizeof(e2ehp->e2eh_recv_time));
+    custom_hton(&(e2ehp->e2eh_byte_offset), sizeof(e2ehp->e2eh_byte_offset));
+    custom_hton(&(e2ehp->e2eh_data_length), sizeof(e2ehp->e2eh_data_length));
+
 
 	if (tdp->td_ts_table.ts_options & (TS_ON | TS_TRIGGERED)) {
 		ttep = &tdp->td_ts_table.ts_hdrp->tsh_tte[wdp->wd_ts_entry];
@@ -626,6 +669,16 @@ if (xgp->global_options & GO_DEBUG_E2E) fprintf(stderr,"DEBUG_E2E: %lld: xdd_e2e
 									   sizeof(struct sockaddr_in));
 
 		if (e2ep->e2e_send_status <= 0) {
+		
+		    custom_ntoh(&(e2ehp->e2eh_magic), sizeof(e2ehp->e2eh_magic));
+			custom_ntoh(&(e2ehp->e2eh_worker_thread_number), sizeof(e2ehp->e2eh_worker_thread_number));
+			custom_ntoh(&(e2ehp->e2eh_sequence_number), sizeof(e2ehp->e2eh_sequence_number));
+			custom_ntoh(&(e2ehp->e2eh_send_time), sizeof(e2ehp->e2eh_send_time));
+			custom_ntoh(&(e2ehp->e2eh_recv_time), sizeof(e2ehp->e2eh_recv_time));
+			custom_ntoh(&(e2ehp->e2eh_byte_offset), sizeof(e2ehp->e2eh_byte_offset));
+			custom_ntoh(&(e2ehp->e2eh_data_length), sizeof(e2ehp->e2eh_data_length));
+
+		
 			xdd_e2e_err(wdp,"xdd_e2e_eof_source_side","ERROR: error sending EOF to destination\n");
 			return(-1);
 		}
@@ -650,6 +703,14 @@ if (xgp->global_options & GO_DEBUG_E2E) fprintf(stderr,"DEBUG_E2E: %lld: xdd_e2e
 		ttep->tte_op_number =e2ehp->e2eh_sequence_number;
 		ttep->tte_op_type = TASK_OP_TYPE_EOF;
 	}
+
+	custom_ntoh(&(e2ehp->e2eh_magic), sizeof(e2ehp->e2eh_magic));
+    custom_ntoh(&(e2ehp->e2eh_worker_thread_number), sizeof(e2ehp->e2eh_worker_thread_number));
+    custom_ntoh(&(e2ehp->e2eh_sequence_number), sizeof(e2ehp->e2eh_sequence_number));
+    custom_ntoh(&(e2ehp->e2eh_send_time), sizeof(e2ehp->e2eh_send_time));
+    custom_ntoh(&(e2ehp->e2eh_recv_time), sizeof(e2ehp->e2eh_recv_time));
+    custom_ntoh(&(e2ehp->e2eh_byte_offset), sizeof(e2ehp->e2eh_byte_offset));
+    custom_ntoh(&(e2ehp->e2eh_data_length), sizeof(e2ehp->e2eh_data_length));
 
 
 	if (bytes_sent != e2ep->e2e_header_size) {
