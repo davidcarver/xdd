@@ -70,6 +70,7 @@ xdd_status_after_io_op(worker_data_t *wdp) {
 			xgp->progname,
 			tdp->td_target_number, 
 			wdp->wd_worker_number);
+		tdp->td_abort = 1;
 	}
 
 	if (wdp->wd_counters.tc_current_error_count >= xgp->max_errors) {
@@ -79,6 +80,7 @@ xdd_status_after_io_op(worker_data_t *wdp) {
 			wdp->wd_worker_number,
 			(long long int)wdp->wd_counters.tc_current_error_count,
 			(long long int)xgp->max_errors);
+		tdp->td_abort = 1;
 	}
 
 	if ((wdp->wd_task.task_io_status == 0) && (wdp->wd_task.task_errno == 0)) {
@@ -206,7 +208,7 @@ xdd_raw_after_io_op(worker_data_t *wdp) {
 void
 xdd_e2e_after_io_op(worker_data_t *wdp) {
 	target_data_t	*tdp;
-
+	int32_t status = 0;
 
 	tdp = wdp->wd_tdp;
 if (xgp->global_options & GO_DEBUG_E2E) fprintf(stderr,"DEBUG_E2E: %lld: xdd_e2e_after_io_op: Target: %d: Worker: %d: ENTER\n", (long long int)pclk_now(),tdp->td_target_number,wdp->wd_worker_number);
@@ -226,14 +228,19 @@ if (xgp->global_options & GO_DEBUG_E2E) xdd_show_task(&wdp->wd_task);
 			wdp->wd_current_state |= WORKER_CURRENT_STATE_SRC_SEND;
 
 			if (PLAN_ENABLE_XNI & tdp->td_planp->plan_options) {
-				xint_e2e_xni_send(wdp);
+				status = xint_e2e_xni_send(wdp);
 			}
 			else {
 if (xgp->global_options & GO_DEBUG_E2E) fprintf(stderr,"DEBUG_E2E: %lld: xdd_e2e_after_io_op: Target: %d: Worker: %d: Calling xdd_e2e_src_send...\n", (long long int)pclk_now(),tdp->td_target_number,wdp->wd_worker_number);
-                xdd_e2e_src_send(wdp);
+                status = xdd_e2e_src_send(wdp);
 if (xgp->global_options & GO_DEBUG_E2E) fprintf(stderr,"DEBUG_E2E: %lld: xdd_e2e_after_io_op: Target: %d: Worker: %d: Returned from xdd_e2e_src_send...\n", (long long int)pclk_now(),tdp->td_target_number,wdp->wd_worker_number);
 			}
 			wdp->wd_current_state &= ~WORKER_CURRENT_STATE_SRC_SEND;
+		
+			//If the status is "-1" then something bad happened
+			if (status == -1) {
+				wdp->wd_counters.tc_current_error_count = 1;
+			}
 
 		} // End of me being the SOURCE in an End-to-End test 
 	} // End of processing a End-to-End
@@ -345,6 +352,12 @@ xdd_worker_thread_ttd_after_io_op(worker_data_t *wdp) {
 
 	// Extended Statistics 
 	xdd_extended_stats(wdp);
+
+	// Send Operation Status Checking
+	xdd_status_after_io_op(wdp);
+
+	if (tdp->td_abort)
+		return;
 
 } // End of xdd_worker_thread_ttd_after_io_op()
 
