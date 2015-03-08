@@ -115,7 +115,7 @@ xdd_restart_write_restart_file(xint_restart_t *rp) {
 	long long int restart_offset;
 
 	// Determine the new offset
-	if (rp->byte_offset >= rp->last_committed_byte_offset) {
+	if (rp->byte_offset > rp->last_committed_byte_offset) {
 		restart_offset = rp->byte_offset;
 	
 		// Seek to the beginning of the file
@@ -249,11 +249,10 @@ xdd_restart_monitor(void *data) {
 				cur_wdp = restart_wdp = current_tdp->td_next_wdp;
 				while ((cur_wdp = cur_wdp->wd_next_wdp)) {
 					/* Find the lowest byte offset that is not -1*/
-				    if ((restart_wdp->wd_task.task_byte_offset == -1) && (cur_wdp->wd_task.task_byte_offset > -1)) {
-						restart_wdp = cur_wdp;
-					}
-					if ((cur_wdp->wd_task.task_byte_offset > -1) && (cur_wdp->wd_task.task_byte_offset < restart_wdp->wd_task.task_byte_offset)) {
-						restart_wdp = cur_wdp;
+				    if (cur_wdp->wd_task.task_byte_offset > -1) {
+				    	if ((restart_wdp->wd_task.task_byte_offset == -1) || (cur_wdp->wd_task.task_byte_offset < restart_wdp->wd_task.task_byte_offset)) {
+				    		restart_wdp = cur_wdp;
+				    	}
 					}
 				}
 					
