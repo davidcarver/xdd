@@ -48,6 +48,7 @@ PYCRYPTO_DIST := @PYCRYPTO_DIST@
 #
 SHELL =	/bin/sh
 OS = $(shell uname)
+HOST = $(shell hostname)
 
 #
 # Source locations
@@ -56,6 +57,7 @@ DOC_DIR = doc
 LIB_DIR = lib
 SRC_DIR = src
 HDR_DIR = include
+TESTS_DIR = tests
 BASE_DIR = $(SRC_DIR)/base
 BX_DIR = $(SRC_DIR)/bx
 CLIENT_DIR = $(SRC_DIR)/client
@@ -343,34 +345,58 @@ TAGS: $(XDD_SRC)
 	@$(ETAGS) $^
 
 #
-# Build other tests
+# Build and run unit tests
 #
-bin/basic-ib-test: tests/other/xni/basic-ib-test.c $(LIB_DIR)/libxdd.a
+bin/basic-ib-test: $(TESTS_DIR)/other/xni/basic-ib-test.c $(LIB_DIR)/libxdd.a
 	$(CC) $(CPPFLAGS) $(CFLAGS) -L$(LIB_DIR) $< -lxdd $(LIBS) -o $@
 
-bin/basic-xni-test: tests/other/xni/basic-xni-test.c $(LIB_DIR)/libxdd.a
+bin/basic-xni-test: $(TESTS_DIR)/other/xni/basic-xni-test.c $(LIB_DIR)/libxdd.a
 	$(CC) $(CPPFLAGS) $(CFLAGS) -L$(LIB_DIR) $< -lxdd $(LIBS) -o $@
-
-test: contrib/mpil bin/basic-xni-test
 
 check_xni: bin/basic-xni-test bin/basic-ib-test
 	@# This should somehow run all xni tests
 
 check_tools: contrib xdd
 	@# This should somehow run all of the tests.
-	@$(PYTHON) tests/unit/site-packages/paramiko_test.py
-	@$(PYTHON) tests/unit/site-packages/xdd_file_transfer_test.py
-	@$(PYTHON) tests/unit/site-packages/xdd_flow_test.py
-	@$(PYTHON) tests/unit/site-packages/xdd_factory_test.py
-	@$(PYTHON) tests/unit/site-packages/xdd_naming_test.py
-	@$(PYTHON) tests/unit/site-packages/xdd_partition_test.py
-	@$(PYTHON) tests/unit/site-packages/xdd_transfer_manager_test.py
-	@$(PYTHON) tests/unit/site-packages/xdd_transport_test.py
+	@$(PYTHON) $(TESTS_DIR)/unit/site-packages/paramiko_test.py
+	@$(PYTHON) $(TESTS_DIR)/unit/site-packages/xdd_file_transfer_test.py
+	@$(PYTHON) $(TESTS_DIR)/unit/site-packages/xdd_flow_test.py
+	@$(PYTHON) $(TESTS_DIR)/unit/site-packages/xdd_factory_test.py
+	@$(PYTHON) $(TESTS_DIR)/unit/site-packages/xdd_naming_test.py
+	@$(PYTHON) $(TESTS_DIR)/unit/site-packages/xdd_partition_test.py
+	@$(PYTHON) $(TESTS_DIR)/unit/site-packages/xdd_transfer_manager_test.py
+	@$(PYTHON) $(TESTS_DIR)/unit/site-packages/xdd_transport_test.py
 
 check: check_tools check_xni
 	@# This should somehow run all of the tests.
 
-.PHONY: test check check_tools check_xni
+.PHONY: check check_tools check_xni
+
+#
+# Build and run acceptance tests (this requires a make install)
+#
+$(TESTS_DIR)/etc/test_config.$(HOST):
+
+test_config: $(TESTS_DIR)/etc/test_config.$(HOST)
+	@cp tests/etc/test_config.$(HOST) $@
+
+test_xdd: test_config
+	@$(TESTS_DIR)/acceptance/test_xdd_datapattern_random.sh
+	@$(TESTS_DIR)/acceptance/test_xdd_e2e_large_thread_count.sh
+
+test_xddmcp: test_config
+	@$(TESTS_DIR)/acceptance/test_xddmcp_defaults.sh
+	@$(TESTS_DIR)/acceptance/test_xddmcp_verbose.sh
+	@$(TESTS_DIR)/acceptance/test_xddmcp_timestamp.sh
+	@$(TESTS_DIR)/acceptance/test_xddmcp_single_thread.sh
+	@$(TESTS_DIR)/acceptance/test_xddmcp_large_thread_count.sh
+	@$(TESTS_DIR)/acceptance/test_xddmcp_too_large_thread_count.sh
+
+test: install test_xdd test_xddmcp
+
+.INTERMEDIATE: $(TESTS_DIR)/etc/test_config.$(HOST)
+ 
+.PHONY: test test_xdd test_xddmcp
 
 #
 # Build rules for cleaning up derived files

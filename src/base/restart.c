@@ -115,27 +115,26 @@ xdd_restart_write_restart_file(xint_restart_t *rp) {
 	long long int restart_offset;
 
 	// Determine the new offset
-	if (rp->byte_offset > rp->initial_restart_offset) {
+	if (rp->byte_offset > rp->last_committed_byte_offset) {
 		restart_offset = rp->byte_offset;
-	}
-	else {
-		restart_offset = rp->initial_restart_offset;
-	}
 	
-	// Seek to the beginning of the file 
-	status = fseek(rp->fp, 0L, SEEK_SET);
-	if (status < 0) {
-		fprintf(xgp->errout,"%s: RESTART_MONITOR: WARNING: Seek to beginning of restart file %s failed\n",
-			xgp->progname,
-			rp->restart_filename);
-		perror("Reason");
-	}
-	
-	// Put the ASCII text offset information into the restart file
-	fprintf(rp->fp,"-restart offset %lld\n", (long long int)restart_offset);
+		// Seek to the beginning of the file
+		status = fseek(rp->fp, 0L, SEEK_SET);
+		if (status < 0) {
+			fprintf(xgp->errout,"%s: RESTART_MONITOR: WARNING: Seek to beginning of restart file %s failed\n",
+				xgp->progname,
+				rp->restart_filename);
+			perror("Reason");
+		}
 
-	// Flush the file for safe keeping
-	fflush(rp->fp);
+		// Put the ASCII text offset information into the restart file
+		fprintf(rp->fp,"-restart offset %lld\n", (long long int)restart_offset);
+
+		// Flush the file for safe keeping
+		fflush(rp->fp);
+
+		rp->last_committed_byte_offset = restart_offset;
+	}
 
 	return(0);
 } // End of xdd_restart_write_restart_file()
@@ -249,17 +248,19 @@ xdd_restart_monitor(void *data) {
 				struct xint_worker_data *cur_wdp, *restart_wdp;
 				cur_wdp = restart_wdp = current_tdp->td_next_wdp;
 				while ((cur_wdp = cur_wdp->wd_next_wdp)) {
-					/* Find the lowest byte offset */
-					if (cur_wdp->wd_task.task_byte_offset < restart_wdp->wd_task.task_byte_offset) {
-						restart_wdp = cur_wdp;
+					/* Find the lowest byte offset that is not -1*/
+				    if (cur_wdp->wd_task.task_byte_offset > -1) {
+				    	if ((restart_wdp->wd_task.task_byte_offset == -1) || (cur_wdp->wd_task.task_byte_offset < restart_wdp->wd_task.task_byte_offset)) {
+				    		restart_wdp = cur_wdp;
+				    	}
 					}
 				}
 					
 				/* The located task effectively becomes the restart point */
 				rp->byte_offset = restart_wdp->wd_task.task_byte_offset;
-				rp->last_committed_byte_offset = -1;
 				rp->last_committed_length = restart_wdp->wd_task.task_xfer_size;
-				rp->last_committed_op = -1;
+				rp->last_committed_op = restart_wdp->wd_task.task_op_number;
+                
 				/*
 				// In the case of Restart processing it is ok to use the tot_byte_offset
 				// rather than the tot_op_number.
@@ -307,7 +308,9 @@ xdd_restart_monitor(void *data) {
 	            */
 				// ...and write it to the restart file and sync sync sync
 				if (current_tdp->td_target_options & TO_E2E_DESTINATION) // Restart files are only written on the destination side
+				{
 					xdd_restart_write_restart_file(rp);
+				}
 
 			}
 			// UNLOCK the restart struct

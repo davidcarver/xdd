@@ -70,5 +70,20 @@ xdd_target_thread_cleanup(target_data_t *tdp) {
 	free(tdp->io_buffers);
 	tdp->io_buffers = NULL;
 	tdp->io_buffers_count = 0;
+
+	/* On non e2e, close the descriptor */
+	if (!(TO_ENDTOEND & tdp->td_target_options)) {
+		int rc = close(tdp->td_file_desc);
+		// Check the status of the CLOSE operation to see if it worked
+		if (rc != 0) {
+			fprintf(xgp->errout,"%s: xdd_target_open: ERROR: Could not close target number %d name %s\n",
+				xgp->progname,
+				tdp->td_target_number,
+       		                tdp->td_target_full_pathname);
+                	fflush(xgp->errout);
+                	perror("reason");
+		}
+	}
+    
 } // End of xdd_target_thread_cleanup()
 

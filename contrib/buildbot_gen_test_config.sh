@@ -77,7 +77,7 @@ esac
 # Testing locations
 #
 build_dir=${nightly_base_path}/build
-install_dir=$(pwd)
+install_dir=${nightly_base_path}/install
 output_dir=${nightly_base_path}/logs
 test_src_dir=${source_mnt}/test-data
 test_dest_dir=${dest_mnt}/test-data
@@ -100,6 +100,7 @@ mkdir -p $test_local_dir
 # Generate the nightly tests config file
 #
 cat >test_config <<EOF
+XDDTEST_TESTS_DIR=$(pwd)/tests
 XDDTEST_XDD_EXE=$install_dir/bin/xdd
 XDDTEST_XDD_GETFILESIZE_EXE=$install_dir/bin/xdd-getfilesize
 XDDTEST_XDD_GETHOSTIP_EXE=$install_dir/bin/xdd-gethostip
@@ -112,7 +113,6 @@ XDDTEST_XDDFT_EXE=$install_dir/src/tools/xddft/xddft
 XDDTEST_XDDFT_EXE=$install_dir/src/tools/xddmcp/xddmcp
 XDDTEST_XDD_PATH=${install_dir}/bin
 XDDTEST_MPIL_EXE=$build_dir/xdd/contrib/mpil
-XDDTEST_TESTS_DIR=$build_dir/xdd/tests
 XDDTEST_LOCAL_MOUNT=$test_local_dir
 XDDTEST_SOURCE_MOUNT=$test_src_dir
 XDDTEST_DEST_MOUNT=$test_dest_dir
@@ -120,6 +120,8 @@ XDDTEST_OUTPUT_DIR=$output_dir
 XDDTEST_E2E_SOURCE=${srchost}
 XDDTEST_E2E_DEST=${dsthost}
 XDDTEST_USER=${USER}
+XDDTEST_E2E_DEST_XDD_PATH=${install_dir}/bin
+XDDTEST_E2E_SOURCE_XDD_PATH=${install_dir}/bin
 XDDTEST_XDD_REMOTE_PATH=${install_dir}/bin
 XDDTEST_XDD_LOCAL_PATH=${install_dir}/bin
 XDDTEST_TIMEOUT=${test_timeout}
@@ -130,4 +132,4 @@ EOF
 #
 autoconf
 autoheader
-./configure $configure_flags
+./configure --prefix=${install_dir} $configure_flags
