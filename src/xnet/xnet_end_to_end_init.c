@@ -78,7 +78,8 @@ init_xni(target_data_t *tdp)
 {
 	int rc = 0;
 	/* Create the XNI control block */
-	size_t num_threads = tdp->td_planp->number_of_iothreads;
+	// for now we want one TCP flow per worker
+	size_t num_threads = tdp->td_queue_depth;
 	if (xni_protocol_tcp == tdp->xni_pcl)
 		rc = xni_allocate_tcp_control_block(num_threads,
 											tdp->xni_tcp_congestion,
