@@ -157,7 +157,7 @@ class FlowBuilderTransport:
             import sys
             # Now give the user 2 tries with their password
             for i in range(0, 2):
-                print(getpass.getuser(), '@', hostname, ' ', sep='', end='')
+                print(getpass.getuser() if user is None else user, '@', hostname, ' ', sep='', end='')
                 sys.stdout.flush()
                 pw = getpass.getpass()
                 try:
