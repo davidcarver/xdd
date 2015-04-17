@@ -119,7 +119,7 @@ class TransferManager:
         assert hostIP
         assert hostname
         assert 0 < threads
-        sink = {'ip': hostIP, 'hostname': hostname, 'threads': threads, 'port': port, 'ifs': []}
+        sink = {'user' : user, 'ip': hostIP, 'hostname': hostname, 'threads': threads, 'port': port, 'ifs': []}
         if 0 == len(ifs):
             sink['ifs'].append(hostIP)
         else:
@@ -133,7 +133,7 @@ class TransferManager:
         assert hostIP
         assert hostname
         assert 0 < threads
-        source = {'ip': hostIP, 'hostname': hostname, 'threads': threads, 'port': port, 'ifs': []}
+        source = {'user' : user, 'ip': hostIP, 'hostname': hostname, 'threads': threads, 'port': port, 'ifs': []}
         if 0 == len(ifs):
             source['ifs'].append(hostIP)
         else:

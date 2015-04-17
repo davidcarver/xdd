@@ -97,12 +97,13 @@ class EndpointFactory:
         b = None
         hostIP = flowSpec['ip']
         hostname = flowSpec['hostname']
+        user = flowSpec.get('user')  # user is optional
         if 'localhost' == hostIP:
             b = FlowBuilder()
         else:
             # Build a remote transport
             try:
-                trans = FlowBuilderTransport(hostIP, hostname)
+                trans = FlowBuilderTransport(hostIP, hostname, user=user)
                 self.remoteTransports.append(trans)
                 # Extract the flow builder proxy from the transport
                 b = trans.getFlowBuilder()

@@ -185,7 +185,7 @@ def createTransferManager(src, dest, opts, logfilename):
         destHost = 'localhost'
         hostname = 'localhost'
     else:
-        (user, hostname) = destTuples[0]
+        (destUser, hostname) = destTuples[0]
         # Convert to IP to avoid DNS round-robin issues
         if 'localhost' == hostname:
             destHost = hostname
