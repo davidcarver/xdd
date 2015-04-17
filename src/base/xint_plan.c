@@ -72,7 +72,7 @@ int xint_plan_start(xdd_plan_t* planp, xdd_occupant_t* barrier_occupant) {
 	int rc;
 	
 	/* Initialize subsystems */
-	if (PLAN_ENABLE_XNI & planp->plan_options) {
+	if (PLAN_ENDTOEND & planp->plan_options) {
 		xni_initialize();
 	}
 	
@@ -270,7 +270,7 @@ void xint_plan_start_interactive(xdd_plan_t *planp) {
  */
 void xint_plan_finalize(xdd_plan_t *planp) {
 /* Initialize subsystems */
-	if (PLAN_ENABLE_XNI & planp->plan_options)
+	if (PLAN_ENDTOEND & planp->plan_options)
 		xni_finalize();
 }
 

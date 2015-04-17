@@ -4988,9 +4988,6 @@ xddfunc_xni(xdd_plan_t *planp, int32_t argc, char *argv[], uint32_t flags)
 		return -1;
 	}
 	
-	/* Enable XNI in the plan */
-	planp->plan_options |= PLAN_ENABLE_XNI;
-	printf("XNI enabled.\n");
 	/* Add the XNI mode to relevant targets */
 	if (target_number >= 0) {
 		/* Set this option value for a specific target */
