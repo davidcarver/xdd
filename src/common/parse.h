@@ -126,6 +126,7 @@ int xddfunc_targetoffset(xdd_plan_t *planp, int32_t argc, char *argv[], uint32_t
 int xddfunc_targets(xdd_plan_t *planp, int32_t argc, char *argv[], uint32_t flags);
 int xddfunc_targetstartdelay(xdd_plan_t *planp, int32_t argc, char *argv[], uint32_t flags);
 int xddfunc_targetout(xdd_plan_t *planp, int32_t argc, char *argv[], uint32_t flags);
+int xddfunc_tcpwindow(xdd_plan_t *planp, int32_t argc, char *argv[], uint32_t flags);
 int xddfunc_throttle(xdd_plan_t *planp, int32_t argc, char *argv[], uint32_t flags);
 int xddfunc_timelimit(xdd_plan_t *planp, int32_t argc, char *argv[], uint32_t flags);
 int xddfunc_timerinfo(xdd_plan_t *planp, int32_t argc, char *argv[], uint32_t flags);

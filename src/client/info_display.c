@@ -206,6 +206,7 @@ xdd_options_info(xdd_plan_t* planp, FILE *out) {
 		fprintf(out, "Size of TARGET_DATA is %d bytes, %d Aggregate\n",(int)sizeof(target_data_t), (int)sizeof(target_data_t)*planp->number_of_targets);
 		fprintf(out, "Size of RESULTS is %d bytes, %d Aggregate\n",(int)sizeof(results_t), (int)sizeof(results_t)*(planp->number_of_iothreads*2+planp->number_of_targets));
 	}
+	fprintf(out,"Requested TCP window size, %d, bytes\n",planp->e2e_TCP_Win);
 	fprintf(out, "\n");
 	fflush(out);
 } /* end of xdd_options_info() */

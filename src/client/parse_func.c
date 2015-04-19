@@ -3807,6 +3807,26 @@ xddfunc_startdelay(xdd_plan_t *planp, int32_t argc, char *argv[], uint32_t flags
 	}
 }
 /*----------------------------------------------------------------------------*/
+// Specify the TCP window size in bytes to use for E2E transfer
+// Arguments: -tcpwindow #
+//
+int
+xddfunc_tcpwindow(xdd_plan_t *planp, int32_t argc, char *argv[], uint32_t flags)
+{
+	if (argc < 2) {
+		return -1;
+	}
+
+	int winsz = atoi(argv[1]);
+	if (winsz >= 0) {
+		planp->e2e_TCP_Win = winsz;
+	} else {
+		planp->e2e_TCP_Win = DEFAULT_E2E_TCP_WINDOW_SIZE;
+	}
+
+	return 2;
+}
+/*----------------------------------------------------------------------------*/
 // Specify the starting offset into the device in blocks
 // Arguments: -startoffset [target #] #
 // 
