@@ -74,6 +74,9 @@ def createParser():
     parser.add_option('-V', dest='verbose2',
                       action='store_true', default=False,
                       help='add timestamp output to log')
+    parser.add_option('-x', '--reqsize', dest='reqsize',
+                      action='store', type='int', default=8192*1024,
+                      help='size in bytes of each I/O operation [Default: 8388608]')
     return parser
 
 def parseSpec(spec):
@@ -151,7 +154,7 @@ def createTransferManager(src, dest, opts, logfilename):
     transferMgr = xdd.TransferManager()
 
     # Add options
-    transferMgr.setRequestSize(8192*1024)
+    transferMgr.setRequestSize(opts.reqsize)
     if opts.size is not None:
         transferMgr.setTransferSize(opts.size)
     transferMgr.setRestartFlag(opts.resume)
