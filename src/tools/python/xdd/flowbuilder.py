@@ -187,11 +187,11 @@ class FlowBuilder(object):
             pv = ""
         return pv
 
-    def buildFlow(self, isSink, reqSize, flowIdx, numFlows, ifaces,
+    def buildFlow(self, congestion, isSink, reqSize, flowIdx, numFlows, ifaces,
                   dioFlag, serialFlag, verboseFlag, timestampFlag, 
                   xddPath):
         """Create the Flow"""
-        self.flow = Flow(isSink=isSink, reqSize=reqSize, 
+        self.flow = Flow(congestion=congestion, isSink=isSink, reqSize=reqSize,
                          flowIdx=flowIdx, numFlows=numFlows, 
                          ifaces=ifaces, dioFlag=dioFlag, serialFlag=serialFlag,
                          verboseFlag=verboseFlag, timestampFlag=timestampFlag, 

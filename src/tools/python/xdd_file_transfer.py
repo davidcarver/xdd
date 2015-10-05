@@ -45,6 +45,8 @@ def createParser():
     parser.add_option('-a', '--resume', dest='resume',
                       action='store_true', default=False,
                       help='enable resume for partially completed transfers')
+    parser.add_option('-c', '--congestion', dest='congestion',
+                      help='override the default TCP congestion control algorithm')
     parser.add_option('-d', dest='dio', 
                       action='store', type='choice', choices=['s', 'd', 'b'],
                       metavar='s|d|b',
@@ -154,6 +156,7 @@ def createTransferManager(src, dest, opts, logfilename):
     transferMgr = xdd.TransferManager()
 
     # Add options
+    transferMgr.setCongestion(opts.congestion)  # can be None
     transferMgr.setRequestSize(opts.reqsize)
     if opts.size is not None:
         transferMgr.setTransferSize(opts.size)

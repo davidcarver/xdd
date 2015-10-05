@@ -58,6 +58,7 @@ class TransferManager:
         self.currentRestartOffset = 0
         self.verboseLog = None
 
+        self.congestion = None
         self.requestSize = 0
         self.transferSize = None
         self.restartFlag = False
@@ -77,6 +78,9 @@ class TransferManager:
         self.sources = []
 
 
+    def setCongestion(self, congestion):
+        self.congestion = congestion
+        
     def setRequestSize(self, reqSize):
         """Set the chunk size of data to move across the wire"""
         self.requestSize = reqSize
@@ -186,7 +190,8 @@ class TransferManager:
         assert 0 < len(self.sinks)
         assert self.sinkTarget
         assert self.sourceTarget
-        self.factory = EndpointFactory(self.requestSize,
+        self.factory = EndpointFactory(self.congestion,
+                                       self.requestSize,
                                        self.sourceDIOFlag, 
                                        self.sourceSerialFlag, 
                                        self.sourceVerboseFlag, 

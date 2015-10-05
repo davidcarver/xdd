@@ -39,7 +39,7 @@ class EndpointFactory:
     as required)
     """
 
-    def __init__(self, transferRequestSize, 
+    def __init__(self, congestionControl, transferRequestSize, 
                  sourceDioFlag, sourceSerialFlag, sourceVerboseFlag, 
                  sourceTimestampFlag, sourceXddPath, sources,
                  sinkDioFlag, sinkSerialFlag, sinkVerboseFlag, 
@@ -47,6 +47,7 @@ class EndpointFactory:
                  restartFlag=False):
         """Constructor"""
         # Transfer params
+        self.congestionControl = congestionControl
         self.transferRequestSize = transferRequestSize
 
         # Source params
@@ -141,6 +142,7 @@ class EndpointFactory:
 
             ifaces = self.createIfaceList(spec)
             b.buildFlow(isSink=True,  
+                        congestion=self.congestionControl,
                         reqSize=self.transferRequestSize,
                         flowIdx=idx, numFlows=len(self.sinks),
                         ifaces=ifaces,
@@ -164,6 +166,7 @@ class EndpointFactory:
 
             ifaces = self.createIfaceList(spec)
             b.buildFlow(isSink=False,
+                        congestion=self.congestionControl,
                         reqSize=self.transferRequestSize,
                         flowIdx=idx, numFlows=len(self.sources),
                         ifaces=ifaces,

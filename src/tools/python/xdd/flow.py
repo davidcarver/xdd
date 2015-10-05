@@ -221,8 +221,9 @@ class Flow():
     provided via return codes and the getErrorString method.
     """
 
-    def __init__(self, isSink, reqSize, flowIdx, numFlows, ifaces,
+    def __init__(self, congestion, isSink, reqSize, flowIdx, numFlows, ifaces,
                  dioFlag, serialFlag, verboseFlag, timestampFlag, xddPath=''):
+        self.congestion = congestion
         self.isSink = isSink
         self.reqSize = reqSize
         self.flowIdx = flowIdx
@@ -445,6 +446,8 @@ class Flow():
             cmd.extend(['-op', 'write', '-e2e', 'isdest'])
         else:
             cmd.extend(['-op', 'read', '-e2e', 'issource'])
+        if self.congestion is not None:
+            cmd.extend(['-congestion', self.congestion])
         cmd.extend(['-reqsize', str(self.reqSize), '-blocksize', '1'])
         cmd.extend(['-bytes', str(self.dataSize)])
 
