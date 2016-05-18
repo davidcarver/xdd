@@ -23,7 +23,7 @@ dnl
 dnl Process this file with autoconf to produce a configure script
 dnl
 AC_PREREQ(2.59)
-AC_INIT([xdd], [7.0.0.rc28], bug@xdd.org)
+AC_INIT([xdd], [7.0.0.rc-ramses3], bug@xdd.org)
 AC_CONFIG_HEADER([src/compat/config.h])
 
 
@@ -282,14 +282,13 @@ AC_ARG_ENABLE([numa],
               [enable_numa="$enableval"],
               [enable_numa=yes])
 if test "$enable_numa" = "yes" ; then
-    AC_DEFINE(HAVE_ENABLE_NUMA)
     AC_SEARCH_LIBS([numa_node_to_cpus], [numa], 
                    AC_DEFINE(HAVE_NUMA_NODE_TO_CPUS),
-                   AC_MSG_ERROR([Function numa_node_to_cpus not found.  Use --disable-numa]))
+                   AC_MSG_WARN([Function numa_node_to_cpus not found.  Use --disable-numa]))
 
     AC_SEARCH_LIBS([numa_allocate_cpumask], [numa], 
                    AC_DEFINE(HAVE_NUMA_ALLOCATE_CPUMASK),
-                   AC_MSG_ERROR([Function numa_allocate_cpumask not found.  Use --disable-numa.]))
+                   AC_MSG_WARN([Function numa_allocate_cpumask not found.  Use --disable-numa.]))
 fi
 
 dnl
@@ -315,11 +314,10 @@ AC_ARG_ENABLE([ib],
               [enable_ib="$enableval"], 
               [enable_ib=yes])
 if test "x$enable_ib" = "xyes" ; then
-    AC_DEFINE(HAVE_ENABLE_IB)
-    AC_CHECK_HEADERS([infiniband/verbs.h])
+    AC_CHECK_HEADERS([infiniband/verbs.h], [], [])
     AC_SEARCH_LIBS([ibv_get_device_list], [ibverbs],
                    AC_DEFINE(HAVE_IBV_GET_DEVICE_LIST), 
-                   AC_MSG_ERROR([Function ibv_get_device_list not found.  Use --disable-ib.]))
+                   AC_MSG_WARN([Function ibv_get_device_list not found.  Use --disable-ib.]))
 fi
 
 dnl
@@ -352,6 +350,16 @@ if test "$enable_xfs" = "yes" ; then
                     #include <xfs/libxfs.h>
                     #endif])
 fi
+
+AC_CHECK_HEADERS([xfs/libxfs.h],
+		 AC_CHECK_DECLS([LIBXFS], [], [],
+                                [[#include <xfs/libxfs]]),
+                 [])
+
+AC_CHECK_HEADERS([xfs/xfs.h],
+		 AC_CHECK_DECLS([XFS], [], [],
+                                [[#include <xfs/xfs]]),
+                 [])
 
 dnl
 dnl Check for Linux Magic numbers
@@ -394,18 +402,17 @@ if test "$tr_exists" = "no" ; then
     xddcp_disable="yes"
 fi
 
+netstat_exists="no"
+AC_PATH_PROG([netstat_exists], [netstat], [no])
+if test "$netstat_exists" = "no" ; then
+    AC_MSG_WARN(Support for xddcp disabled.  No working netstat utility.)
+    xddcp_disable="yes"
+fi
+
 if  ! test "$xddcp_disable" = "yes" ; then
    AC_SUBST(XDDCP_ENABLED, "true")
 else
    AC_SUBST(XDDCP_ENABLED, "false")
-fi
-
-netstat_exists="no"
-AC_PATH_PROG([netstat_exists], [netstat], [no])
-if test "$netstat_exists" = "no" ; then
-dnl   AC_MSG_WARN(Some features of xddcp unavailable.  No working netstat utility installed.)
-    AC_MSG_WARN(Support for xddcp disabled.  No working netstat utility.)
-    xddcp_disable="yes"
 fi
 
 dnl
@@ -429,16 +436,42 @@ dnl
 AX_PYTHON()
 
 dnl
-dnl Check for export-controlled packages
+dnl Enable XFS support by default
 dnl
-AC_CHECK_FILES([contrib/pycrypto-2.6.1.tar.gz], 
-               AC_SUBST(PYCRYPTO_DIST, [contrib/pycrypto-2.6.1.tar.gz]),
-               [AX_PYTHON_MODULE([Crypto], 
-                                 [XDD requires PyCrypto.  Due to U.S. Export Controls, PyCrypto must be installed separately from XDD.  See README.crypto])])
-AC_CHECK_FILES([contrib/ecdsa-0.11.tar.gz], 
-               AC_SUBST(ECDSA_DIST, [contrib/ecdsa-0.11.tar.gz]),
-               [AX_PYTHON_MODULE([ecdsa], 
-                                 [XDD requires Python ECDSA.  Due to U.S. Export Controls, ECDSA must be installed separately from XDD.  See README.crypto])])
+AC_ARG_ENABLE([xddmcp],
+              AS_HELP_STRING([--enable-xfs], [Enable XFS preallocation support]),
+              [enable_xddmcp="$enableval"],
+              [enable_xddmcp=yes])
+              
+dnl
+dnl Check for export-controlled packages if xddmcp is enabled
+dnl
+if test "$enable_xddmcp" = "yes" ; then
+    AC_CHECK_FILES([contrib/pycrypto-2.6.1.tar.gz], 
+                   AC_SUBST(PYCRYPTO_DIST, [contrib/pycrypto-2.6.1.tar.gz]),
+                   [AX_PYTHON_MODULE([Crypto], [])])
+    if test "$HAVE_PYMOD_CRYPTO" = "no" ; then
+        AC_MSG_WARN([XDDMCP requires PyCrypto.  Due to U.S. Export Controls, PyCrypto must be installed separately from XDD.  See README.crypto])
+        AC_MSG_ERROR([Use --disable-xddmcp to build without xddmcp support.])
+    fi
+
+    AC_CHECK_FILES([contrib/ecdsa-0.11.tar.gz], 
+                   AC_SUBST(ECDSA_DIST, [contrib/ecdsa-0.11.tar.gz]),
+                   [AX_PYTHON_MODULE([ecdsa], [])]) 
+    if test "$HAVE_PYMOD_ECDSA" = "no" ; then
+        AC_MSG_WARN([XDDMCP requires ECDSA.  Due to U.S. Export Controls, PyCrypto must be installed separately from XDD.  See README.crypto])
+        AC_MSG_ERROR([Use --disable-xddmcp to build without xddmcp support.])
+    fi
+fi
+
+dnl
+dnl If export-controlled packages don't exist, disable xddmcp
+dnl
+if  test "$enable_xddmcp" = "yes" ; then
+   AC_SUBST(XDDMCP_ENABLED, "true")
+else
+   AC_SUBST(XDDMCP_ENABLED, "false")
+fi
 
 dnl
 dnl Check for packages XDD requires directly
