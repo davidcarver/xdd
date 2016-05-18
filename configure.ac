@@ -436,10 +436,10 @@ dnl
 AX_PYTHON()
 
 dnl
-dnl Enable XFS support by default
+dnl Enable xddmcp support by default
 dnl
 AC_ARG_ENABLE([xddmcp],
-              AS_HELP_STRING([--enable-xfs], [Enable XFS preallocation support]),
+              AS_HELP_STRING([--enable-xddmcp], [Enable xddmcp support]),
               [enable_xddmcp="$enableval"],
               [enable_xddmcp=yes])
               
