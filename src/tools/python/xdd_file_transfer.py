@@ -47,6 +47,9 @@ def createParser():
                       help='enable resume for partially completed transfers')
     parser.add_option('-c', '--congestion', dest='congestion',
                       help='override the default TCP congestion control algorithm')
+    parser.add_option('-b', dest='bs',
+                      action='store', type='int', default=8192,
+                      help='the size of a disk/network block in KiB [Default: 8192]')
     parser.add_option('-d', dest='dio', 
                       action='store', type='choice', choices=['s', 'd', 'b'],
                       metavar='s|d|b',
@@ -76,9 +79,6 @@ def createParser():
     parser.add_option('-V', dest='verbose2',
                       action='store_true', default=False,
                       help='add timestamp output to log')
-    parser.add_option('-x', '--reqsize', dest='reqsize',
-                      action='store', type='int', default=8192*1024,
-                      help='size in bytes of each I/O operation [Default: 8388608]')
     return parser
 
 def parseSpec(spec):
@@ -157,7 +157,8 @@ def createTransferManager(src, dest, opts, logfilename):
 
     # Add options
     transferMgr.setCongestion(opts.congestion)  # can be None
-    transferMgr.setRequestSize(opts.reqsize)
+    rs = opts.bs * 1024
+    transferMgr.setRequestSize(rs)
     if opts.size is not None:
         transferMgr.setTransferSize(opts.size)
     transferMgr.setRestartFlag(opts.resume)

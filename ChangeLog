@@ -6,6 +6,7 @@ XDD-7.0.0 RC28
 * XDD: Modified restart process so restart file progress is not overwritten with initial offset
 * XDD: Added endian format conversion functionality
 * XDD: Improve error handling
+* XDDPROF: Add a functioning xddprof
 
 XDD-7.0.0 RC27
 ==============
