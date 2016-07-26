@@ -552,7 +552,11 @@ class Flow():
         """@return true if XDD is compiled with preallocation support"""
         # Just use nm (assume its in the path)
         cmd = ['nm', self.xddExe]
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        try:
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        except OSError:
+            # nm not found
+            return False
         (stdoutdata, _) = p.communicate()
         # If XDD has preallocate support it will have a special symbol
         lines = stdoutdata.split(os.linesep)
