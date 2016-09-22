@@ -14,6 +14,7 @@ import select
 import SocketServer
 import socket
 import sys
+import paramiko
 
 #
 # Python packages supplied and needed by xdd
